@@ -1,16 +1,21 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>canvasExample</title>
-        <meta charset='utf-8' />
-    </head>
-    <body>
-        <svg width="800" height="600">
-          <rect width="800" height="600" style="stroke:rgb(0,0,0); fill:white" onclick="alert('it is room')"/>
-          <rect x="20" y="20" width="150" height="150" style="fill:blue;stroke:pink;stroke-width:5;fill-opacity:0.1;stroke-opacity:0.9"  onclick="alert('its ur first stand')">
-          </rect>
-          <text x="30" y="35" fill="black">I love SVG!</text>
-          Sorry, your browser does not support inline SVG.
-        </svg>
-    </body>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="css.css">
+  <title></title>
+</head>
+<script type="text/javascript" src="./javascript.js"></script>
+<body onload="init(); return false;">
+
+    <!-- <form>
+      <button onclick="main(); return false;">kek</button>
+      <button onclick="circle('100','100','40'); return false;">kek</button>
+    </form> -->
+
+    <!-- нужно будет получить размер окна -->
+    <svg id="canvas" height=100% width=100%>
+    </svg>
+
+</body>
 </html>
