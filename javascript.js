@@ -1,6 +1,13 @@
 //инициализация всего и вся
 //обработка входных данных - ???
 //отрисовка - draw 
+
+//глобальные переменные
+//говорят, в яваскрипте их нужно объявлять как window.global_variable_name = foo
+  window.canvas;
+  window.current_graph;  //(под)граф, который в данный момент отрисовывается
+  window.current_circle; // 
+
 function init()
 {
   var w = window,
@@ -31,10 +38,12 @@ function draw()
   var r = Math.min(width,height);
   
   // всеобъемлющий граф будем называть "g0" и рисовать сами. Он будет  включать в себя все круги или надграфы
-  // соответственно обязательным пунктом в проверке JSON на валидность, будет проверка на то, что имя графа
   // это единственный круг, который является сам себе родителем
-  current_graph = "g0"
+  //выделить это в отдельный класс? (пока что это просто глобальные переменные)
+  
+  current_graph = "g0";
   circle(width/2-w,height/2-w,r/2-2*w,w,"g0");
+  current_circle = canvas.children.namedItem(current_graph);
 
   //json
   //имя графа, описание вершин, размер окружности, в которую вписывается граф
@@ -46,10 +55,10 @@ function draw()
   {\
     "graph_name":"g0",\
     "verticies":[\
-      {"vertex_name":"1","radius":"1","adjacent_to":["2","3","4"]},\
-      {"vertex_name":"2","radius":"1","adjacent_to":["1"]},\
-      {"vertex_name":"3","radius":"1","adjacent_to":["1"]},\
-      {"vertex_name":"4","radius":"1","adjacent_to":["1"]}\
+      {"vertex_name":"1","radius":"10","adjacent_to":["2","3","4"]},\
+      {"vertex_name":"2","radius":"10","adjacent_to":["1"]},\
+      {"vertex_name":"3","radius":"10","adjacent_to":["1"]},\
+      {"vertex_name":"4","radius":"10","adjacent_to":["1"]}\
     ]\
   }\
   ]';
@@ -65,7 +74,8 @@ function circle (cx,cy,r,w,name)
   node.setAttributeNS(null,"cy",cy); 
   node.setAttributeNS(null,"r",r); 
   node.setAttributeNS(null,"name",name);
-  node.setAttributeNS(null,"parent",current_graph); 
+  node.setAttribute("parent",current_graph);   //у всех кругов есть родитель
+  node.setAttribute("children",[]);            //и дети
   node.style.stroke = "#000"; //Set stroke colour
   node.style.strokeWidth = w; //Set stroke width
   node.style.fill = "#FFF";
@@ -107,30 +117,47 @@ function check_json(graph)
 }
 
 //построение одного подграфа
+//т.е просто рисуем набор кругов, которые перечислены в списке вершин
 //контур подграфа может быть уже построен, поэтому нужно проверить имена уже построенных кругов
 //контур графа - круг, в который вписывается подграф
 // если уже что-то есть, то строить внтури
 function plot_graph(graph)
 {
+  current_graph = graph.graph_name;
+  current_circle = canvas.children.namedItem(current_graph);
 
+  //если объемлющего круга для графа нет, то current_graph не тот, что нам нужен
+  if (canvas.children.namedItem(current_graph) == null)
+    return 0;
   var verticies = graph.verticies;
-  graph.drawn = [];
+  //graph.drawn = [];
+  //здесь цикл по всем вершинам только по предположению, что не все вершины смежны между собой, а следовательно
+  //не до всех можно дойти из любой
   for (var i = 0; i < verticies.length; i++) {
-    plot_vertex(verticies[i],graph);    
+    plot_vertex(verticies[i]);    
   };
 
 }
 
 //построение вершины и вершин, смежных к ней
-//нужно хранить где-то список построенных вершин и проверять, построены они или нет
-function plot_vertex(vertex,graph)
+//нужно хранить где-то список построенных вершин и проверять, построены они или нет - за это отвечает текущий граф
+//можно всё смотреть по нему
+//вопрос - как и где строить первую вершину 
+//ответ - в центре графа, точнее в центре круга с именем соответствующего графа
+function plot_vertex(vertex)
 { 
+  var cx = current_circle.getAttribute("cx");
+  var cy = current_circle.getAttribute("cy");
+  circle(cx,cy,vertex.radius,1,vertex.vertex_name);
+  current_circle.getAttribute("children").push(vertex); 
   var verticies = vertex.adjacent_to;
+  var phi = Math.pi * 2 / verticies.length;
   for (var i = 0; i < verticies.length; i++) 
   {
-    if (!(verticies[i] in graph.drawn))
+    if (!(verticies[i] in current_circle.getAttribute("children")))
     {  
-      graph.drawn.push(verticies[i]);
+      //circle(cx + vertex.radius + graph.verticies verticies[i])
+      current_circle.getAttribute("children").  push(verticies[i]);
     }
   }
 }
