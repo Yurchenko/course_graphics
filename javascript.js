@@ -4,9 +4,10 @@
 
 //глобальные переменные
 //говорят, в яваскрипте их нужно объявлять как window.global_variable_name = foo
-  window.canvas;
-  window.current_graph;  //(под)граф, который в данный момент отрисовывается
-  window.current_circle; // 
+window.canvas;
+window.current_graph;   //(под)граф, который в данный момент отрисовывается. не его имя
+window.current_circle;  //
+window.graphs;          //то,что мы получили после того, как распарсили JSON
 
 function init()
 {
@@ -24,32 +25,11 @@ function init()
   
   //построение JSON
 
-  //построение изображения по JSON
-  draw();
-}
-
-
-//отрисовка на канвасе
-function draw()
-{
-  var w = 1; 
-  var width = canvas.getAttribute("width");
-  var height = canvas.getAttribute("height");
-  var r = Math.min(width,height);
-  
-  // всеобъемлющий граф будем называть "g0" и рисовать сами. Он будет  включать в себя все круги или надграфы
-  // это единственный круг, который является сам себе родителем
-  //выделить это в отдельный класс? (пока что это просто глобальные переменные)
-  
-  current_graph = "g0";
-  circle(width/2-w,height/2-w,r/2-2*w,w,"g0");
-  current_circle = canvas.children.namedItem(current_graph);
-
   //json
   //имя графа, описание вершин, размер окружности, в которую вписывается граф
   //с g начинаются графы (подграфы)
   //чтобы не усугублять вложенностью, было решено подграфы писать на том же уровне, что и графы
-  // поэтому мы строим только деревья. А то где на остальное распологать то, а? 
+  // поэтому мы строим только деревья. А то где на остальное распологать то, а?
   // Ок, стороим только деревья, с остальным потом разберёмся\придумаем
   json = '[\
   {\
@@ -63,6 +43,29 @@ function draw()
   }\
   ]';
 
+  //построение изображения по JSON
+  draw(json);
+}
+
+
+//отрисовка на канвасе
+function draw(json)
+{
+  var
+    w = 1,
+    width = canvas.getAttribute("width"),
+    height = canvas.getAttribute("height"),
+    r = Math.min(parseInt(width),parseInt(height));
+  
+  // всеобъемлющий граф будем называть "g0" и рисовать сами. Он будет  включать в себя все круги или надграфы
+  // это единственный круг, который является сам себе родителем
+  //выделить это в отдельный класс? (пока что это просто глобальные переменные)
+  
+  //current_graph = "g0"; не катит, потому что текузего графа ещё нет, потому что мы не распознали json
+  //текущий граф - не просто имя, но структура, из которой можно будет вытащить имя
+  circle(width/2-w,height/2-w,r/2-2*w,w,"g0");
+  current_circle = canvas.children.namedItem(current_graph);
+
   plot(json);
 }
 
@@ -74,8 +77,9 @@ function circle (cx,cy,r,w,name)
   node.setAttributeNS(null,"cy",cy); 
   node.setAttributeNS(null,"r",r); 
   node.setAttributeNS(null,"name",name);
-  node.setAttribute("parent",current_graph);   //у всех кругов есть родитель
-  node.setAttribute("children",[]);            //и дети
+  //node.setAttribute("parent",current_graph);   //у всех кругов есть родитель
+  //node.setAttribute("children",[]);            //и дети
+  //может как-нибудь без этого? у нас всё-таки есть структура JSON, которую вообще можно глобальной сделать
   node.style.stroke = "#000"; //Set stroke colour
   node.style.strokeWidth = w; //Set stroke width
   node.style.fill = "#FFF";
@@ -86,7 +90,9 @@ function circle (cx,cy,r,w,name)
 //построение всего графа
 function plot(json)
 {
-  var graphs = JSON.parse(json);
+  //сделаем его глобальным, целое дерево тут всё-таки. И не будем зато парться по поводу свойств кругов.
+  //этого graphs должно быть достаточно
+  graphs = JSON.parse(json);
   // !TODO 
   graphs.forEach(check_json);  
   //либо мы делаем проверку на то, что граф сначала указывается в списке смежностей, либо мы пишем
@@ -123,18 +129,18 @@ function check_json(graph)
 // если уже что-то есть, то строить внтури
 function plot_graph(graph)
 {
-  current_graph = graph.graph_name;
-  current_circle = canvas.children.namedItem(current_graph);
+  current_graph = graph;
+  current_circle = canvas.children.namedItem(current_graph.graph_name);
 
   //если объемлющего круга для графа нет, то current_graph не тот, что нам нужен
-  if (canvas.children.namedItem(current_graph) == null)
+  if (canvas.children.namedItem(current_graph.graph_name) == null)
     return 0;
   var verticies = graph.verticies;
   //graph.drawn = [];
   //здесь цикл по всем вершинам только по предположению, что не все вершины смежны между собой, а следовательно
   //не до всех можно дойти из любой
   for (var i = 0; i < verticies.length; i++) {
-    plot_vertex(verticies[i]);    
+    plot_vertex(verticies[i]);
   };
 
 }
@@ -149,15 +155,15 @@ function plot_vertex(vertex)
   var cx = current_circle.getAttribute("cx");
   var cy = current_circle.getAttribute("cy");
   circle(cx,cy,vertex.radius,1,vertex.vertex_name);
-  current_circle.getAttribute("children").push(vertex); 
+  //current_circle.getAttribute("children").push(vertex); забили на это, это надо вытаскивать из graphs
   var verticies = vertex.adjacent_to;
   var phi = Math.pi * 2 / verticies.length;
   for (var i = 0; i < verticies.length; i++) 
   {
-    if (!(verticies[i] in current_circle.getAttribute("children")))
+    if (!(verticies[i] in canvas.children)) //если ещё не нарисовано
     {  
-      //circle(cx + vertex.radius + graph.verticies verticies[i])
-      current_circle.getAttribute("children").  push(verticies[i]);
+      circle(cx + (vertex.radius + graph_name.verticies verticies[i])
+      //current_circle.getAttribute("children").  push(verticies[i]);
     }
   }
 }
