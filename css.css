@@ -1,2 +1,27 @@
-html, body { margin:0; padding:0; overflow:hidden }
-svg { position:fixed; top:0; left:0; height:100%; width:100% }
+html, body 
+{ 
+  margin:40; 
+  padding:0; 
+  overflow:hidden 
+}
+
+svg 
+{ 
+  position:fixed; 
+  left:0; 
+  z-index: -1;
+  height:100%; 
+  width:100% 
+}
+
+circle {
+  fill: #FFF;
+  stroke: #000;
+  strokeWidth = 1;
+  pointer-events: all;
+}
+
+circle:hover {
+  stroke: #33AAFF;
+  stroke-width: 2px;
+}

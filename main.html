@@ -5,6 +5,9 @@
   <link rel="stylesheet" type="text/css" href="css.css">
   <title></title>
 </head>
+Выберите файл
+<input type="file" id="files" name="files[]" multiple/>
+<output id="list"></output>
 <script type="text/javascript" src="./javascript.js"></script>
 <body onload="init(); return false;">
 
@@ -14,8 +17,10 @@
     </form> -->
 
     <!-- нужно будет получить размер окна -->
-    <svg id="canvas" height=100% width=100%>
+    <svg id="canvas">
+      <!-- viewBox="600 200 200 200" -->
     </svg>
-
 </body>
+
+
 </html>
